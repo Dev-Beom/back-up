@@ -37,7 +37,7 @@ ThreadPoolTaskExecutor를 활용해 해당 로직을 비동기로 다른 쓰레�
 
 # 문제 해결 방법
 
-@Async는 Spring Framework에 정의가 되어있기 때문에 따로 *dependencies*에 설정하지 않아도 된다.
+`@Async`는 Spring Framework에 정의가 되어있기 때문에 따로 *dependencies*에 설정하지 않아도 된다.
 
 스프링 프로젝트가 실행될 때 설정할 비동기 처리를 위한 ThreadPoolTaskExecutor의 정보를 Configuration Class를 만들어 정의 해주고 빈으로 등록한다.
 
@@ -66,7 +66,7 @@ class AsyncConfig(
 }
 ```
 
-@Retryable과 @Recover를 사용하려면 spring-retry dependency가 필요하니 불러와준다.
+`@Retryable`과 `@Recover`를 사용하려면 spring-retry dependency가 필요하니 불러와준다.
 
 ```kotlin
 implementation("org.springframework.retry:spring-retry:1.3.3")
