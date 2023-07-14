@@ -57,9 +57,9 @@ class AsyncConfig(
     @Bean
     fun mailServiceThreadPoolTaskExecutor(): Executor {
         val taskExecutor = ThreadPoolTaskExecutor()
-        taskExecutor.corePoolSize = blockKitCorePoolSize // 기본 스레드 수
-        taskExecutor.maxPoolSize = blockKitMaxPoolSize // 최대 스레드 수
-        taskExecutor.queueCapacity = blockKitQueueCapacity // Queue 사이즈
+        taskExecutor.corePoolSize = mailServiceCorePoolSize // 기본 스레드 수
+        taskExecutor.maxPoolSize = mailServiceMaxPoolSize // 최대 스레드 수
+        taskExecutor.queueCapacity = mailServiceQueueCapacity // Queue 사이즈
         taskExecutor.setThreadNamePrefix("Executor-")
         return taskExecutor
     }
