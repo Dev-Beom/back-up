@@ -265,4 +265,4 @@ Page 대략 TPS 140
 
 Slice 대략 TPS 70
 
-No offset(clustered index; pk) 대햑 TPS 40
+No offset(clustered index; pk) 대략 TPS 40
