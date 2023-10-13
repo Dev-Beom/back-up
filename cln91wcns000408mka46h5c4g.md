@@ -14,7 +14,13 @@ Spring Boot는 내장형 서버를 기본적으로 포함하여 주로 Tomcat을
 
 어플리케이션의 작업 종류와 특성에 따라 Thread Pool 크기를 조절해야 한다. CPU-Bound 작업과 I/O-Bound 작업은 다른 Thread pool 크기를 필요로 할 수 있다.
 
-* CPU-Bound 작업에서 적절한 Thread 수는 CPU core 개수 + 1 이다.
+* CPU-Bound 작업에서 적절한 Thread 수는 CPU core 개수 + 1 이다. ([자바 병렬 프로그래밍](https://product.kyobobook.co.kr/detail/S000000935083)) 이유는 Context Switching overhead 비용때문이다. 따라서 CPU-Bound Application은 CPU 자원을 많이 사용하기 때문에 CPU core 개수와 비슷한 수준 이상으로 늘려봤자 별 이점이 없으며, 오히려 각 Core에서 Thread가 많아질 수록 Context Switching 때문에 오버헤드만 더 많아져 성능에 안좋은 영향을 주게 된다.
+    
+* I/O-Bound 작업은 File I/O, Network I/O, Database 조회와 같은 I/O 작업이 많을 수록 Thread를 늘리는 것이 좋다. 이런 작업들은 I/O 장치의 응답 속도에 의존하는 것이 큰데, 예를 들어 File I/O는 File을 Read하기 위해 Disk에 데이터를 조회하는데 있어 하드웨어의 한계상 I/O 작업에 걸리는 시간이 상재거으로 오래 걸리므로 이 때 CPU는 I/O 작업이 완료될 때까지 idle 상태가 된다. 그래서 Single Thread일 경우 I/O 작업을 진행하는 동안 Blocking 되어 자원 낭비가 발생한다.
+    
+    하지만 Multi Thread일 경우 I/O 작업이 처리될 동안 다음에 이행할 작업들을 다른 Thread에게 자원을 할당하여 수행하도록 할 수 있다. Network I/O도 마찬가지로 Network 상황에 따라 전송 시간이 오래 걸릴 수 있으므로 Network 지연동안 thread를 재활용 시킬 수 있다. 따라서 I/O 작업이 많은 상황에서는 CPU Core 개수 보다 많게 2배, 3배 혹은 그 이상으로 Thread count를 늘려주는것이 Core들을 더 효율적으로 쓸 수 있기 때문에 성능 면에서 이점이 있다. 그러나 Thread를 늘리면 늘릴수록 잔여 Thread의 Context switching overhead와 Synchronization 등의 문제점이 동반 될 수 있기 때문에, I/O bound Application에 Multi-Thread model 대신 Async I/O 처리에 특화된 Event driven Programming Model(WebFlux)등을 쓸 수 있다.
+    
+    Event Loop를 통해 I/O Event를 감지하고 Event Handler를 호출하여 해당 Event를 처리하는 식이다. 만약 I/O 작업을 수행해야 하는 경우, Event Handler는 Async I/O를 사용해 I/O 작업을 수행하고 I/O 작업이 완료될 때까지 Event loop를 Blocking하지 않게 된다. 그래서 작업 처리 도중 다른 작업을 처리할 수 있어서 Multi-Thread Model에 비해 더 적은 resource를 사용하고 높은 처리량을 보여줄 수 있다. Main Thread가 Single-Thread이기 때문에 Multi-Thread model에서 발생할 수 있는 Synchronization 문제나 Race condition 등을 걱정할 필요 없이 CPU-bound 혹은 I/O-bound 작업이 발생하면 그때에만 Multi-Thread를 가져와 사용한다.
     
 
 |  | Spring MVC | Spring WebFlux |
@@ -224,6 +230,29 @@ class IOBoundControllerByCoroutine {
             .awaitSingle()
     }
 }
+```
+
+```yaml
+version: "3.7"
+services:
+  perform-spring-mvc:
+    image: perform-spring-mvc:latest
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "256M"
+    ports:
+      - "8080:8080"
+  perform-spring-webflux:
+    image: perform-spring-webflux:latest
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "256M"
+    ports:
+      - "8081:8081"
 ```
 
 # 결론
